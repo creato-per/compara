@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Per | Comparativo & Ranking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js para a renderização do gráfico de comparação -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #990000;
+            --primary-dark: #660000;
+            --primary-light: #b31414;
+            --bg-main: #120303;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.1);
+            --border-focus: rgba(255, 255, 255, 0.3);
+            --text-main: #f9f9f9;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --accent: #e53935;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-main);
+            background-image: radial-gradient(circle at 50% 0%, #300606 0%, var(--bg-main) 70%);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            padding: 40px 20px 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #ff8a8a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo p {
+            margin-top: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-link {
+            color: var(--text-main);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            border-color: var(--border-focus);
+            background: var(--bg-card-hover);
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .secao-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .secao-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slots-comparacao {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .slot-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .slot-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:hover {
+            border-color: var(--border-focus);
+        }
+
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+        }
+
+        select option {
+            background: #1f0505;
+            color: var(--text-main);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ranking-select-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ranking-select-wrapper label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .tabela-ranking {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .tabela-ranking th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        .tabela-ranking td {
+            padding: 14px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: #fff;
+        }
+
+        .tabela-ranking tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        .posicao-num {
+            font-weight: 800;
+            color: var(--accent);
+            width: 40px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        footer {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 25px 20px 10px; flex-direction: column; align-items: flex-start; gap: 15px; }
+            .slots-comparacao { grid-template-columns: 1fr; }
+            .ranking-header { flex-direction: column; align-items: flex-start; }
+            .ranking-select-wrapper { width: 100%; }
+            .ranking-select-wrapper select { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <h1>Analytics • Náutico</h1>
+            <p>Comparativo de Desempenho & Ranking Per Game</p>
+        </div>
+        <a href="index.html" class="nav-link">← Voltar ao Elenco</a>
+    </header>
+
+    <main class="container">
+        <!-- BLOCO 1: GRÁFICO COMPARATIVO DE DESEMPENHO -->
+        <section class="secao-card">
+            <div class="secao-titulo">
+                <span>Evolução Geral (%) — Das Partidas Antigas para Recentes</span>
+            </div>
+            
+            <div class="slots-comparacao">
+                <div class="slot-group">
+                    <label for="jogador1">Jogador 1</label>
+                    <select id="jogador1" onchange="atualizarGrafico()">
+                        <option value="">Selecione um atleta...</option>
+                    </select>
+                </div>
+                <div class="slot-group">
+                    <label for="jogador2">Jogador 2</label>
+                    <select id="jogador2" onchange="atualizarGrafico()">
+                        <option value="">Selecione um atleta...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="graficoComparativo"></canvas>
+            </div>
+        </section>
+
+        <!-- BLOCO 2: RANKING ESTATÍSTICO PER GAME -->
+        <section class="secao-card">
+            <div class="ranking-header">
+                <div class="secao-titulo" style="margin-bottom: 0;">Ranking por Média (Per Game)</div>
+                <div class="ranking-select-wrapper">
+                    <label for="metricaRanking">Métrica:</label>
+                    <select id="metricaRanking" onchange="renderizarRanking()">
+                        <option value="participacao_em_gol">Participação em Gol p/ Jogo</option>
+                        <option value="desarme">Desarmes p/ Jogo</option>
+                        <option value="chance_criada">Chances Criadas p/ Jogo</option>
+                        <option value="chute_no_gol">Chutes no Gol p/ Jogo</option>
+                        <option value="drible_certo">Dribles Certos p/ Jogo</option>
+                        <option value="bloqueio">Bloqueios p/ Jogo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="tabela-ranking">
+                    <thead>
+                        <tr>
+                            <th class="posicao-num">#</th>
+                            <th>Atleta</th>
+                            <th>Posição</th>
+                            <th>Jogos</th>
+                            <th>Total Acumulado</th>
+                            <th id="labelMediaColuna">Média / Jogo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoRanking">
+                        <tr><td colspan="6" class="empty-state">Carregando dados do GitHub...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Create Per Náutico • Football Data Intelligence</p>
+    </footer>
+
+    <script>
+        const urlElenco = 'https://raw.githubusercontent.com/creato-per/CREATE-PER-NAUTICO-/main/Elenco.json';
+        const urlDados = 'https://raw.githubusercontent.com/creato-per/CREATE-PER-NAUTICO-/main/Dados.json';
+
+        let elencoGlobal = [];
+        let scoutsGlobal = [];
+        let meuGrafico = null;
+
+        async function carregarDadosPagina() {
+            try {
+                const [respElenco, respScout] = await Promise.all([
+                    fetch(urlElenco),
+                    fetch(urlDados)
+                ]);
+
+                if (!respElenco.ok || !respScout.ok) {
+                    throw new Error("Erro ao carregar arquivos do repositório GitHub.");
+                }
+
+                const dadosElenco = await respElenco.json();
+                const dadosScout = await respScout.json();
+
+                elencoGlobal = dadosElenco.atletas || [];
+                scoutsGlobal = dadosScout.atletas || [];
+
+                popularSelectsJogadores();
+                inicializarGraficoVazio();
+                renderizarRanking();
+            } catch (erro) {
+                console.error("Erro:", erro);
+                document.getElementById("corpoRanking").innerHTML = `
+                    <tr><td colspan="6" class="empty-state" style="color: #ff8a8a;">Erro ao carregar dados do GitHub. Verifique sua conexão.</td></tr>
+                `;
+            }
+        }
+
+        function popularSelectsJogadores() {
+            const select1 = document.getElementById("jogador1");
+            const select2 = document.getElementById("jogador2");
+
+            const atletasOrdenados = [...elencoGlobal].sort((a, b) => a.nome.localeCompare(b.nome));
+
+            let optionsHtml = '<option value="">Nenhum</option>';
+            atletasOrdenados.forEach(atleta => {
+                optionsHtml += `<option value="${atleta.nome}">${atleta.nome} (${atleta.posicao})</option>`;
+            });
+
+            select1.innerHTML = optionsHtml;
+            select2.innerHTML = optionsHtml;
+
+            if (atletasOrdenados.length > 0) select1.value = atletasOrdenados[0].nome;
+            if (atletasOrdenados.length > 1) select2.value = atletasOrdenados[1].nome;
+
+            atualizarGrafico();
+        }
+
+        function obterHistoricoPartidas(atletaObj) {
+            // Se o JSON tiver um array de histórico de partidas (antigas -> recentes)
+            if (atletaObj.historico_partidas && Array.isArray(atletaObj.historico_partidas)) {
+                return atletaObj.historico_partidas.map(p => p.geral || 0);
+            }
+            // Fallback se houver apenas a última partida registrada no modelo antigo
+            if (atletaObj.ultima_partida) {
+                return [atletaObj.ultima_partida.geral || 0];
+            }
+            return [0];
+        }
+
+        function inicializarGraficoVazio() {
+            const ctx = document.getElementById('graficoComparativo').getContext('2d');
+            meuGrafico = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Partida Anterior', 'Última Partida'],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f9f9f9', font: { family: 'Inter', size: 12 } }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function atualizarGrafico() {
+            const nome1 = document.getElementById("jogador1").value;
+            const nome2 = document.getElementById("jogador2").value;
+
+            let datasets = [];
+            let maxTamanhoHistorico = 2;
+
+            if (nome1) {
+                const atletaObj = elencoGlobal.find(a => a.nome === nome1);
+                const historico = atletaObj ? obterHistoricoPartidas(atletaObj) : [0];
+                if (historico.length > maxTamanhoHistorico) maxTamanhoHistorico = historico.length;
+                
+                datasets.push({
+                    label: nome1,
+                    data: historico,
+                    borderColor: '#e53935',
+                    backgroundColor: 'rgba(229, 57, 53, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                });
+            }
+
+            if (nome2) {
+                const atletaObj = elencoGlobal.find(a => a.nome === nome2);
+                const historico = atletaObj ? obterHistoricoPartidas(atletaObj) : [0];
+                if (historico.length > maxTamanhoHistorico) maxTamanhoHistorico = historico.length;
+
+                datasets.push({
+                    label: nome2,
+                    data: historico,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                });
+            }
+
+            // Gera os labels do eixo X dinamicamente baseados na quantidade de partidas (da direita para esquerda)
+            let labelsDinamicos = [];
+            for (let i = maxTamanhoHistorico; i >= 1; i--) {
+                if (i === 1) {
+                    labelsDinamicos.push('Última Partida');
+                } else {
+                    labelsDinamicos.push(`Partida -${i-1}`);
+                }
+            }
+
+            if (meuGrafico) {
+                meuGrafico.data.labels = labelsDinamicos;
+                meuGrafico.data.datasets = datasets;
+                meuGrafico.update();
+            }
+        }
+
+        function renderizarRanking() {
+            const metrica = document.getElementById("metricaRanking").value;
+            const corpo = document.getElementById("corpoRanking");
+            const labelColuna = document.getElementById("labelMediaColuna");
+
+            const nomesMetricasLabels = {
+                'participacao_em_gol': 'Part. Gol / Jogo',
+                'desarme': 'Desarmes / Jogo',
+                'chance_criada': 'Chances Criadas / Jogo',
+                'chute_no_gol': 'Chutes no Gol / Jogo',
+                'drible_certo': 'Dribles / Jogo',
+                'bloqueio': 'Bloqueios / Jogo'
+            };
+            labelColuna.innerText = nomesMetricasLabels[metrica] || 'Média / Jogo';
+
+            let listaCalculada = elencoGlobal.map(atleta => {
+                const scout = scoutsGlobal.find(s => s.nome.toLowerCase() === atleta.nome.toLowerCase()) || {
+                    jogos: 0,
+                    participacao_em_gol: 0,
+                    bloqueio: 0,
+                    desarme: 0,
+                    chance_criada: 0,
+                    drible_certo: 0,
+                    chute: 0,
+                    chute_no_gol: 0
+                };
+
+                const totalAtributo = scout[metrica] || 0;
+                const totalJogos = scout.jogos || 0;
+                const mediaPerGame = totalJogos > 0 ? (totalAtributo / totalJogos) : 0;
+
+                return {
+                    nome: atleta.nome,
+                    posicao: atleta.posicao,
+                    jogos: totalJogos,
+                    total: totalAtributo,
+                    media: mediaPerGame
+                };
+            });
+
+            listaCalculada.sort((a, b) => b.media - a.media);
+
+            if (listaCalculada.length === 0) {
+                corpo.innerHTML = `<tr><td colspan="6" class="empty-state">Nenhum dado encontrado para ranking.</td></tr>`;
+                return;
+            }
+
+            let htmlTabela = "";
+            listaCalculada.forEach((item, index) => {
+                htmlTabela += `
+                    <tr>
+                        <td class="posicao-num">${index + 1}º</td>
+                        <td><strong>${item.nome}</strong></td>
+                        <td><span style="font-size: 11px; padding: 4px 8px; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid var(--border); color: var(--text-muted);">${item.posicao}</span></td>
+                        <td>${item.jogos}</td>
+                        <td>${item.total}</td>
+                        <td><strong style="color: var(--accent);">${item.media.toFixed(2)}</strong></td>
+                    </tr>
+                `;
+            });
+
+            corpo.innerHTML = htmlTabela;
+        }
+
+        carregarDadosPagina();
+    </script>
+</body>
+</html>
